@@ -1,4 +1,4 @@
-![FingerBeamLogo](images/logo.svg)
+![FingerBeamLogo](images/logo.jpg)
 
 ### Description
 With FingerBeam you can convert any beamer projection into an interactive screen. This is specially useful for presentations in which interactive visualizations have to be shown. The software consists of a Python program using openCV to track a laser pointer or an LED on the projection of a beamer and move the computer mouse accordingly.
