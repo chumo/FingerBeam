@@ -1,5 +1,6 @@
+# -*- coding: utf-8 -*-
 # FingerBeam: convert any beamer projection into an interactive screen.
-# Copyright (C) 2015 Jesús Martínez-Blanco ()@chumo)
+# Copyright (c) 2015 Jesús Martínez-Blanco (@chumo)
 
 # imports
 import cv2
@@ -151,6 +152,9 @@ class PS(object):
 
 		return scX, scY
 
+	def set_corners(self,corners):
+		self.corners = np.float32(corners[-4:])
+
 # create video capture
 capture = cv2.VideoCapture(1)
 #capture.set(cv2.cv.CV_CAP_PROP_FPS, 30)
@@ -178,6 +182,9 @@ try:
 except:
 	pass
 
+# instantiate PS
+ps = PS(corners)
+
 # acquisition loop
 while(1):
 	_, frame = capture.read()
@@ -194,7 +201,11 @@ while(1):
 	elif c in ['t', 'T']:
 		subproc = 'Mouse test'
 	elif c in ['m', 'M']:
-		subproc = 'Mouse control'
+		if len(ps.corners) >= 4: # check that the corners have been defined
+			subproc = 'Mouse control'
+		else:
+			print 'Tell me where are the corners of the projection on the camera image.'
+			subproc = 'Set image corners'
 
 	# depending on the flag, do one thing or another
 	if subproc == 'Set image corners':
@@ -202,8 +213,7 @@ while(1):
 			cv2.circle(frame,(corner[0],corner[1]),5,255,-1)
 
 		cv2.setMouseCallback('frame', click_corner, frame)
-		if len(corners) >= 4: # if we have four, instantiate PS
-			ps = PS(corners)
+		ps.set_corners(corners)
 
 	elif subproc == 'Pick color to track':
 		cv2.setMouseCallback('frame', pick_color, frame)
@@ -227,29 +237,26 @@ while(1):
 		cv2.imshow('thresh', thresh)
 
 	elif subproc == 'Mouse control':
-		if len(corners) >= 4: # check that the corners have been defined
-			track_color()
-		else:
-			print 'Tell me where are the corners of the projection on the camera image.'
-			subproc = 'Set image corners'
+		track_color()
 
 	# negative conditions
 	if subproc != 'Pick color to track':
 		cv2.destroyWindow('zoom')
-	# if subproc != 'Mouse test':
-	# 	cv2.destroyWindow('thresh')
-
-	# update frame
-	cv2.putText(frame, subproc, (10, 35), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-	cv2.imshow('frame', frame)
+	if subproc != 'Mouse test':
+		cv2.destroyWindow('thresh')
+	if subproc != 'Mouse control':
+		cv2.putText(frame, subproc, (10, 35), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+		cv2.imshow('frame', frame)
+	else:
+		cv2.destroyWindow('frame')
 
 	#hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
 	#cv2.imshow('red', frame[:,:,2])
 	#cv2.imshow('green', frame[:,:,1])
 	#cv2.imshow('blue', frame[:,:,0])
 
-	thresh = getThresImage()
-	cv2.imshow('thresh', thresh)
+	# thresh = getThresImage()
+	# cv2.imshow('thresh', thresh)
 
 # Save the list of corners in the hard disk
 with open("corners.dat",'w+') as f:
